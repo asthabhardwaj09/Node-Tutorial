@@ -5,13 +5,15 @@ const url = require('url')
 const myServer = http.createServer((req, res) => {
     if (req.url==='/favicon.ico') return res.end;
     // console.log(req.headers)
-    const log = `${Date.now()}:${req.url}:New Req Recieved\n`
+    const log = `${Date.now()}:${req.method}:${req.url}:New Req Recieved\n`
     const myUrl= url.parse(req.url,true)
     console.log(myUrl);
     fs.appendFile('log.txt', log, (err, data) => {
         switch (myUrl.pathname) {
             case '/':
-                res.end("HomePage")
+                if(req.method==="GET"){
+                    console.log(`This is a ${res.end("HomePage")}`);
+                }
                 break
             case '/About':
                 res.end("Welcome to about page")
@@ -19,6 +21,10 @@ const myServer = http.createServer((req, res) => {
             case '/Contact':
                 const qp=myUrl.query.search
                 res.end(`${qp} it is a dog name german saford`)
+                break
+            case "/Signup":
+                if(req.method==="GET") res.end("This is a Signup form")
+                else if(req.method==="POST") req.end("SUCCESS")
                 break
             default:
                 res.end('404 error')

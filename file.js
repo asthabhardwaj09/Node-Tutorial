@@ -42,4 +42,4 @@ fs.appendFileSync("./test.txt",`Hey there\n`)
 
 // fs.mkdirSync("my-doc")
 
-fs.mkdirSync("my-doc/a/b",{recursive:true})
+fs.mkdirSync("my-doc/a/b",{recursive:false})
