@@ -1,5 +1,5 @@
 function add(a,b){
-     let sum=a+b
+    let sum=a+b
     console.log("This is the answer of addition",sum);
 }
 
@@ -16,4 +16,9 @@ module.exports={
     add,
     sub
 }
+
+
+//we can do it like this also
+// exports.add()
+// exports.sub()
 
