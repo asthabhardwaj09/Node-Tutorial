@@ -1,0 +1,19 @@
+//const user = users.find((user)=>user.id===id);
+
+// 👉 user temporary hota hai jab tak check chal raha hai
+// 👉 match milte hi wahi object bahar aa kar final user ban jaata hai
+
+// find() ka RULE (yaad rakhna 📌)
+
+// JavaScript engine ko pehle se bola hua hota hai:
+
+// “Array ke har element par function chalao
+// agar function true bole →
+// wahi element return karo
+// aur turant ruk jao”
+
+// Isliye:
+
+// ❌ jo match nahi karta → throw away
+
+// ✅ jo match karta → return
