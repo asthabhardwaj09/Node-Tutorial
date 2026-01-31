@@ -9,7 +9,8 @@
 
 const express = require("express")
 const fs = require("fs")
-let users = require("./MOCK_DATA.json")
+// let users = require("./MOCK_DATA.json") =======>>>> when we use filter method on delete http method
+const users = require("./MOCK_DATA.json")
 
 const app = express();
 PORT = 8000;
@@ -19,10 +20,12 @@ app.use(express.urlencoded({ extended: false }))
 
 //Routes
 
+//User data
 app.get("/api/users", (req, res) => {
     return res.json(users);
 });
 
+//Searching user through id
 app.get("/api/users/:id", (req, res) => {
     const id = Number(req.params.id);
     const user = users.find((user) => user.id === id);
@@ -37,22 +40,56 @@ app
         return res.json(user);
     })
     .patch((req, res) => {
-        return res.json({ status: "pending" });
-    })
-    .delete((req, res) => {
-        let id = Number(req.params.id);
+        const id = Number(req.params.id);
 
-        users = users.filter(user => user.id !== id);
-
+        const index = users.findIndex(user => user.id === id);
+        if (index === -1) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        // merge old data with new data
+        users[index] = {
+            ...users[index], //old data
+            ...req.body, //new data
+            id: users[index].id // protect id (Even if user send a fake id it will not be changed)
+        };
         fs.writeFile("./MOCK_DATA.json", JSON.stringify(users, null, 2), (err) => {
             if (err) {
                 return res.status(500).json({ message: "Failed to update file" });
+            }
+            return res.json({
+                status: "SUCCESS",
+                updatedUser: users[index]
+            });
+        });
+        // return res.json({ status: "pending" });
+    })
+    .delete((req, res) => {
+        let id = Number(req.params.id);
+        const index = users.findIndex(user => user.id === id)
+        if (index === -1) {
+            return res.json("User not found")
+        }
+        users.splice(index, 1)
+        fs.writeFile("./MOCK_DATA.json", JSON.stringify(users, null, 2), (err) => {
+            if (err) {
+                return res.json({ message: "Failed to update file" });
             }
 
             return res.json({ status: "SUCCESS" });
         });
     });
 
+
+//     users = users.filter(user => user.id !== id);
+
+//     fs.writeFile("./MOCK_DATA.json", JSON.stringify(users, null, 2), (err) => {
+//         if (err) {
+//             return res.status(500).json({ message: "Failed to update file" });
+//         }
+
+//         return res.json({ status: "SUCCESS" });
+//     });
+// });
 
 
 app.post('/api/users', (req, res) => {

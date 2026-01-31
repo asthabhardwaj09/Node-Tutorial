@@ -17,3 +17,250 @@
 // ❌ jo match nahi karta → throw away
 
 // ✅ jo match karta → return
+
+
+//--------------------------------------------------------
+
+//PATCH method working
+
+📌 PATCH API – Update User (Notes)
+
+1️⃣ Purpose of PATCH
+
+PATCH is used to partially update a resource.
+
+Only the fields sent by the client are updated.
+
+Remaining fields stay unchanged.
+
+2️⃣ Finding the user
+const index = users.findIndex(user => user.id === id);
+
+findIndex() returns the index of the matching element.
+
+Returns -1 if user is not found.
+
+if (index === -1) {
+    return res.status(404).json({ message: "User not found" });
+}
+
+-1 means user does not exist.
+
+404 → resource not found.
+
+return stops further execution.
+
+
+3️⃣ Actual UPDATE logic (MOST IMPORTANT)
+users[index] = {
+    ...users[index],
+    ...req.body,
+    id: users[index].id
+};
+
+
+🔹 What this does
+
+Updates the user inside the array
+
+Merges old data + new data
+
+🔹 Line-by-line role
+
+...users[index] → keeps old data
+
+...req.body → updates only provided fields
+
+id: users[index].id → prevents ID change
+
+🔹 Why order matters
+
+Later values overwrite earlier ones
+
+ID is placed last to protect it
+
+
+
+4️⃣ Writing updated data to file
+fs.writeFile("./MOCK_DATA.json", JSON.stringify(users, null, 2), callback);
+
+
+Saves updated users array to JSON file
+
+JSON.stringify(..., null, 2) → formatted JSON
+
+
+5️⃣ Sending response to client
+return res.json({
+    status: "SUCCESS",
+    updatedUser: users[index]
+});
+
+🔹 What updatedUser: users[index] does
+
+Sends the updated user object to the client
+
+Used only for confirmation / display
+
+❌ What it does NOT do
+
+Does NOT update data
+
+Does NOT modify file
+
+Only sends response
+
+
+6️⃣ Key Difference (Very Important)
+Code	                  Role
+users[index] = {...}	  ✅ Updates data
+updatedUser: users[index] 📤 Sends data
+
+
+7️⃣ One-line memory trick
+
+PATCH = Merge old data + new data → Save → Send updated user
+
+
+
+8️⃣ Common Mistake to Avoid
+
+❌ Thinking response updates data:
+
+res.json({ updatedUser: users[index] })
+
+
+✅ Only the assignment updates data:
+
+users[index] = {...}
+
+//------------------------------------------------------------------
+
+DELETE API – Quick & Clear Notes (Node.js / Express)
+
+
+1️⃣ Overall Flow of DELETE API
+
+1. URL se `id` aati hai
+2. `findIndex()` se user ka index milta hai
+3. Agar index `-1` ho → user nahi mila (404)
+4. `splice()` se user delete hota hai
+5. `fs.writeFile()` se updated data JSON file me save hota hai
+6. Success ya error response bheja jata hai
+
+---
+
+2️⃣ `findIndex()` Method
+
+```js
+const index = users.findIndex(user => user.id === id);
+```
+
+### Kya karta hai?
+
+* Array me condition ke basis par **index dhoondhta** hai
+* **Sirf index return karta hai**, data delete nahi karta
+
+### Important Points
+
+* Array ko **change nahi karta** (non-mutating)
+* Match na mile to **-1 return karta hai**
+* Callback ke andar ka `user` → array ka **current element** hota hai
+
+### Example
+
+```js
+[10, 20, 30]
+findIndex(20) → 1
+```
+
+---
+
+3️⃣ `splice()` Method
+
+```js
+users.splice(index, 1);
+```
+
+### Syntax
+
+```js
+array.splice(startIndex, deleteCount)
+```
+
+### Kya karta hai?
+
+* Array se element **remove / add** karta hai
+* **Original array ko modify karta hai** (mutating)
+
+### Is line ka matlab
+
+* `index` → kaha se delete shuru karna hai
+* `1` → kitne elements delete karne hain
+
+### Example (index = 2)
+
+```js
+[A, B, C, D]
+splice(2,1)
+→ [A, B, D]
+```
+
+### Extra Point
+
+* `splice()` removed elements ka array bhi return karta hai
+
+---
+
+4️⃣ `findIndex()` vs `splice()`
+
+| Method      | Kaam            | Main Array Change? |
+| ----------- | --------------- | ------------------ |
+| findIndex() | Index dhoondhna | ❌ No               |
+| splice()    | Delete / add    | ✅ Yes              |
+
+👉 DELETE API me dono ka use perfect combination hai
+
+---
+
+5️⃣ `fs.writeFile()` Method
+
+```js
+fs.writeFile("./MOCK_DATA.json", JSON.stringify(users, null, 2), callback);
+```
+
+### Kya karta hai?
+
+* Data ko file me **save (overwrite)** karta hai
+* Asynchronous hota hai
+
+### `JSON.stringify(users, null, 2)`
+
+* JS object → JSON string
+* `2` → pretty formatting (readable file)
+
+### Callback `(err) => {}`
+
+* Error hua → `err` me value aayegi
+* Success → `err = null`
+
+---
+
+6️⃣ Important Interview Notes
+
+* `findIndex()` → non-mutating
+* `splice()` → mutating
+* `fs.writeFile()` → async, callback ke andar response bhejna chahiye
+* DELETE API = search + delete + save
+
+---
+
+7️⃣ One-Line Revision
+
+* **findIndex** dhoondhta hai, delete nahi karta
+* **splice** delete karta hai, array badal deta hai
+* **writeFile** changes ko permanent banata hai
+
+---
+
+✅ Ye notes directly notebook ya interview prep ke liye likh sakti ho
