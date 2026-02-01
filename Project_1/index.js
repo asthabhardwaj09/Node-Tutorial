@@ -31,21 +31,28 @@ app.use((req,res,next)=>{
 
 //User data
 app.get("/api/users", (req, res) => {
+    console.log(req.headers);
+    
+    res.setHeader("X-myname","astha") //Always add X to custom header
     return res.json(users);
 });
 
 //Searching user through id
-app.get("/api/users/:id", (req, res) => {
-    const id = Number(req.params.id);
-    const user = users.find((user) => user.id === id);
-    return res.json(user);
-})
+// app.get("/api/users/:id", (req, res) => {
+//     const id = Number(req.params.id);
+//     const user = users.find((user) => user.id === id);
+//     return res.json(user);
+// })
 
 app
     .route("/api/users/:id")
     .get((req, res) => {
         const id = Number(req.params.id);
         const user = users.find((user) => user.id === id);
+        console.log(user); //you can check by this        
+        if(!user){ //cannot write user!==id because user is a object and id is number
+            res.status(400).json({message:"user not found"})
+        }
         return res.json(user);
     })
     .patch((req, res) => {
@@ -103,11 +110,14 @@ app
 
 app.post('/api/users', (req, res) => {
     const body = req.body;
+    if(!body || !body.first_name || !body.last_name || !body.gender || !body.email || !body.job_title){
+        return res.status(400).json({msg:"All fields are req..."})
+    }
     // console.log("Body",body)
     users.push({ ...body, id: users.length + 1 })
     // users.push(body)
     fs.writeFile("./MOCK_DATA.json", JSON.stringify(users), (err, data) => {
-        return res.json({ status: "SUCCESS", id: users.length })
+        return res.status(201).json({ status: "SUCCESS", id: users.length })
     });
 
     // return res.json({status:"SUCCESS",id:users.length+1})
