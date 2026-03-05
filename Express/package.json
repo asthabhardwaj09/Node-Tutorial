@@ -5,10 +5,10 @@
   "license": "ISC",
   "author": "",
   "type": "commonjs",
-  "main": "Hello.js",
+  "main": "express.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "youtube": "node Hello.js"
+    "youtube": "node express.js"
   },
   "dependencies": {
     "express": "^5.2.1"
