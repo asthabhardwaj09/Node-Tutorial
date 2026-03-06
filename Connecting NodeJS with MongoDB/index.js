@@ -146,13 +146,14 @@ app.post('/api/users', async (req, res) => {
     ) {
         return res.status(400).json({ msg: "All fields are required" });
     }
-    await User.create({
+    const result= await User.create({
         firstName: body.first_name,
         lastName: body.last_name,
         email: body.email,
         gender: body.gender,
         jobTitle: body.job_title,
-    })
+    });
+    return res.status(201).json({msg:"success"})
 });
 
 
