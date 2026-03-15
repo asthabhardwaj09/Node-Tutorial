@@ -1,12 +1,14 @@
+const { timeStamp } = require("console");
 const express = require("express")
 const fs = require("fs")
-const mongoose= require("mongoose")
-// const users = require("./MOCK_DATA.json")
+const mongoose= require("mongoose");
+const { type } = require("os");
 
 const app = express();
 PORT = 8000;
 
-//
+//connection of mongoose
+
 mongoose
     .connect("mongodb://127.0.0.1:27017/youtube-app-1")
     .then(()=>console.log("MongoDB connected"))
@@ -33,8 +35,10 @@ const userSchema=new mongoose.Schema({
     },
     gender:{
         type:String,
-    }
-})
+    },
+    },
+    {timestamps:true }
+);
 
 //schema - Model
 const User=mongoose.model("user",userSchema)
@@ -55,22 +59,29 @@ app.use((req, res, next) => {
 
 //Routes
 
-app.get("/users", (req, res) => {
+app.get("/users", async(req, res) => {
+    const allDbUsers=await User.find({})
     const html = `
     <ul>
-    ${users
-        .map((user) => `<li>${user.first_name}-${user.email}</li>`)
+    ${allDbUsers
+        .map((user) => `<li>${user.firstName}-${user.email}</li>`)
         .join("")}
     </ul>
     `;
     res.send(html);
 })
 
+
 //User data
-app.get("/api/users",(req, res) => {
-    // console.log(req.headers);
-    res.setHeader("X-myname", "astha") //Always add X to custom header
-    return res.json(users);
+app.get("/api/users", async (req, res) => {
+    try {
+        const allDbUsers = await User.find({});
+        res.setHeader("X-myname", "astha");
+        return res.json(allDbUsers);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ msg: "Internal server error" });
+    }
 });
 
 // Searching user through id
@@ -83,52 +94,21 @@ app.get("/api/users",(req, res) => {
 
 app
     .route("/api/users/:id")
-    .get((req, res) => {
-        const id = Number(req.params.id);
-        const user = users.find((user) => user.id === id);
+    .get(async (req, res) => {
+        const user = await User.findById(req.params.id);
         // console.log(user); //you can check by this        
         if (!user) { //cannot write user!==id because user is a object and id is number
             return res.status(400).json({ message: "user not found" })
         }
         return res.json(user);
     })
-    .patch((req, res) => {
-        const id = Number(req.params.id);
-
-        const index = users.findIndex(user => user.id === id);
-        if (index === -1) {
-            return res.status(404).json({ message: "User not found" });
-        }
-        // merge old data with new data
-        users[index] = {
-            ...users[index], //old data
-            ...req.body, //new data
-            id: users[index].id // protect id (Even if user send a fake id it will not be changed)
-        };
-        fs.writeFile("./MOCK_DATA.json", JSON.stringify(users, null, 2), (err) => {
-            if (err) {
-                return res.status(500).json({ message: "Failed to update file" });
-            }
-            return res.json({
-                status: "SUCCESS",
-                updatedUser: users[index]
-            });
-        });
-    })
-    .delete((req, res) => {
-        let id = Number(req.params.id);
-        const index = users.findIndex(user => user.id === id)
-        if (index === -1) {
-            return res.json("User not found")
-        }
-        users.splice(index, 1)
-        fs.writeFile("./MOCK_DATA.json", JSON.stringify(users, null, 2), (err) => {
-            if (err) {
-                return res.json({ message: "Failed to update file" });
-            }
-
-            return res.json({ status: "SUCCESS" });
-        });
+    .patch(async(req, res) => {
+        await User.findByIdAndUpdate(req.params.id,{lastName:"Bhardwaj"})
+        return res.json({status:"Success"})
+        })
+    .delete(async(req, res) => {
+        await User.findByIdAndDelete(req.params.id)
+        return res.json({status:"Success"})
     });
 
 
@@ -153,6 +133,7 @@ app.post('/api/users', async (req, res) => {
         gender: body.gender,
         jobTitle: body.job_title,
     });
+    console.log(result)
     return res.status(201).json({msg:"success"})
 });
 
