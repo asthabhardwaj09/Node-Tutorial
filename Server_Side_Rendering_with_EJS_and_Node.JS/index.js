@@ -4,6 +4,10 @@ const { connectToMongoDB } = require("./connect")
 const URL = require("./models/url")
 const staticRoute = require("./routes/staticsRouter")
 const { handelGenerateNewShortUrl, handelGetAnalytics } = require("./controllers/url")
+const cookieparser =require('cookie-parser')
+const {restrictToLoggedinUserOnly}= require('./Middlewares/auth')
+
+const userRoute =require('./routes/user')
 
 const app = express()
 const PORT = 8001;
@@ -16,6 +20,7 @@ app.set('views', path.resolve("./views"))
 
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
+app.use(cookieparser())
 
 app.use((req, res, next) => {
     console.log("Method:", req.method)
@@ -24,8 +29,10 @@ app.use((req, res, next) => {
     next()
 })
 
+app.use('/user',userRoute)
+
 // 1. URL routes directly
-app.post("/url", handelGenerateNewShortUrl)
+app.post("/url", restrictToLoggedinUserOnly, handelGenerateNewShortUrl)
 app.get("/url/analytics/:shortId", handelGetAnalytics)
 
 // 2. Test route (MUST come before catch-all /:shortId)
@@ -34,7 +41,10 @@ app.get("/test", async (req, res) => {
     return res.render('home', { urls: allUrls });
 });
 
-// 3. Short URL redirect (catch-all - must be last)
+// 3. Static routes and pages (must be before the catch-all short URL redirect)
+app.use("/", staticRoute)
+
+// 4. Short URL redirect (catch-all - must be last)
 app.get('/:shortId', async (req, res) => {
     const shortId = req.params.shortId;
     console.log("Visiting shortId:", shortId);
@@ -47,8 +57,5 @@ app.get('/:shortId', async (req, res) => {
     if (!entry) return res.status(404).json({ error: "Short URL not found" });
     res.redirect(entry.redirectURL);
 });
-
-// 4. Static routes (always last)
-app.use("/", staticRoute)
 
 app.listen(PORT, () => console.log(`server started at port ${PORT}`))
