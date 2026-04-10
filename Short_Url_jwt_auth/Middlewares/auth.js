@@ -1,23 +1,24 @@
 const { getUser } = require("../service/auth");
 
-async function restrictToLoggedinUserOnly(req,res,next){
-    const userUid=req.cookies.uid;
-    console.log("Cookie uid:", userUid); // Debug: check what's in the cookie
-    if(!userUid) return res.redirect('/login')
+async function restrictToLoggedinUserOnly(req, res, next) {
+    const userUid = req.headers['authorization'];  
+
+    if (!userUid) return res.redirect('/login');
+
+    const token = userUid.split('Bearer ')[1];  
 
     try {
-        const user=getUser(userUid)
-        if(!user)return res.redirect('/login')
-        req.user=user;
+        const user = getUser(token);  //using token, not userUid
+        if (!user) return res.redirect('/login');
+
+        req.user = user;
         next();
     } catch (error) {
-        // Handle JWT malformed or invalid token errors
         console.log("JWT Error:", error.message);
-        return res.redirect('/login')
+        return res.redirect('/login');
     }
-
 }
 
-module.exports={
+module.exports = {
     restrictToLoggedinUserOnly
 }
